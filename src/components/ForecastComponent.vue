@@ -1,7 +1,7 @@
 <template>
     <div>
-        <form @submit.prevent="getForecastFromZip()" class="enter-zip">
-            <label>Enter zip</label>
+        <form @submit.prevent="parseInput()" class="enter-zip">
+            <label>Enter zip/City, State</label>
             <input type="text" v-model="zip" class="zip-input"/>
             <button v-on:click="printJSON">Get forecasts</button>
         </form>
@@ -41,17 +41,33 @@ export default {
 
     methods: {
 
+        parseInput() {
+            const input = this.zip
+            if (isNaN(input)) {
+                let cityAndState = input.split(", ")
+                let area = Zipcodes.lookupByName(cityAndState[0], cityAndState[1])
+                let lat = area[0].latitude
+                let long = area[0].longitude
+                this.getForecast(lat, long)
+            } else {
+                let area = Zipcodes.lookup(input)
+                let lat = area.latitude
+                let long = area.longitude
+                this.getForecast(lat, long)
+            }
+        },
+
         printJSON() {
             this.forecasts = json
             // console.log(json.properties.periods)
         },
 
-        async getForecastFromZip() {
+        async getForecast(latitude, longitude) {
             this.$emit('getForecast', this.zip)
             try {
-                let point = Zipcodes.lookup(this.zip)
+                // let point = Zipcodes.lookup(this.zip)
                 // this.$emit('Zipcode object', point)
-                fetch(`https://api.weather.gov/points/${point.latitude},${point.longitude}`)
+                fetch(`https://api.weather.gov/points/${latitude},${longitude}`)
                 .then(response => response.json())
                 .then(body => {
                     console.log(body)
