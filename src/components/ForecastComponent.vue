@@ -3,8 +3,11 @@
         <form @submit.prevent="parseInput()" class="enter-zip">
             <label>Enter zip/City, State</label>
             <input type="text" v-model="zip" class="zip-input"/>
-            <button v-on:click="printJSON">Get forecasts</button>
+            <button>Get forecasts</button>
         </form>
+        <div v-if="location != '' ">
+            {{location}}
+        </div>
         <table>
             <thead>
                 <tr>
@@ -35,6 +38,8 @@ export default {
     data() {
         return {
             forecasts: [],
+            zip: '',
+            location: '',
             myJSON: json
         }
     },
@@ -57,11 +62,6 @@ export default {
             }
         },
 
-        printJSON() {
-            this.forecasts = json
-            // console.log(json.properties.periods)
-        },
-
         async getForecast(latitude, longitude) {
             this.$emit('getForecast', this.zip)
             try {
@@ -71,6 +71,7 @@ export default {
                 .then(response => response.json())
                 .then(body => {
                     console.log(body)
+                    this.getLocationData(body)
                     const serviceCall = body.properties.forecast
                     fetch(serviceCall)
                     .then(response => response.json())
@@ -82,6 +83,13 @@ export default {
                 console.error(error)
             }
         },
+
+        getLocationData(json) {
+            const properties = json.properties.relativeLocation
+            const city = properties.properties.city
+            const state = properties.properties.state
+            this.location = `${city}, ${state}`
+        }
     }
 }
 </script>
